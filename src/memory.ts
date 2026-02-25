@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
-import type { Document, StorageAdapter } from "./types.js";
+import { randomUUID } from 'node:crypto';
+import type { Document, StorageAdapter } from './types.js';
 
 /** In-memory storage adapter for development and testing */
 export class MemoryAdapter implements StorageAdapter {
@@ -33,10 +33,7 @@ export class MemoryAdapter implements StorageAdapter {
     return this.store.get(id) ?? null;
   }
 
-  async update(
-    id: string,
-    data: Record<string, unknown>,
-  ): Promise<Document> {
+  async update(id: string, data: Record<string, unknown>): Promise<Document> {
     const existing = this.store.get(id);
     if (!existing) {
       throw new Error(`Document not found: ${id}`);

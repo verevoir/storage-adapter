@@ -18,16 +18,23 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "pg": "^8.13.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.11.0",
+    "@eslint/js": "^9.39.3",
     "@testcontainers/postgresql": "^10.0.0",
+    "@types/pg": "^8.11.0",
+    "eslint": "^9.39.3",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
     "tsup": "^8.0.0",
     "typescript": "^5.7.0",
+    "typescript-eslint": "^8.56.1",
     "vitest": "^3.0.0"
   }
 }

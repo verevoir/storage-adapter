@@ -1,4 +1,4 @@
-import type { Pool } from "pg";
+import type { Pool } from 'pg';
 
 const CREATE_TABLE = `
 CREATE TABLE IF NOT EXISTS documents (

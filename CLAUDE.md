@@ -13,14 +13,14 @@ A database-agnostic persistence layer for NextLake content. Provides an abstract
 ## Quick Example
 
 ```typescript
-import { MemoryAdapter } from "@nextlake/storage";
+import { MemoryAdapter } from '@nextlake/storage';
 
 const storage = new MemoryAdapter();
 await storage.connect();
 
-const doc = await storage.create("hero", { title: "Hello", featured: true });
+const doc = await storage.create('hero', { title: 'Hello', featured: true });
 const fetched = await storage.get(doc.id);
-const heroes = await storage.list("hero");
+const heroes = await storage.list('hero');
 
 await storage.disconnect();
 ```
@@ -28,15 +28,15 @@ await storage.disconnect();
 ### Postgres
 
 ```typescript
-import { PostgresAdapter } from "@nextlake/storage";
+import { PostgresAdapter } from '@nextlake/storage';
 
 const storage = new PostgresAdapter({
-  connectionString: "postgres://user:pass@localhost:5432/mydb",
+  connectionString: 'postgres://user:pass@localhost:5432/mydb',
 });
 
 await storage.connect();
 await storage.migrate(); // creates documents table
-const doc = await storage.create("hero", { title: "Hello" });
+const doc = await storage.create('hero', { title: 'Hello' });
 await storage.disconnect();
 ```
 

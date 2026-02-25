@@ -1,6 +1,6 @@
-import pg from "pg";
-import type { Document, StorageAdapter } from "../types.js";
-import { migrate } from "./migrations.js";
+import pg from 'pg';
+import type { Document, StorageAdapter } from '../types.js';
+import { migrate } from './migrations.js';
 
 export interface PostgresAdapterOptions {
   connectionString: string;
@@ -51,10 +51,7 @@ export class PostgresAdapter implements StorageAdapter {
     return this.rowToDocument(result.rows[0]);
   }
 
-  async update(
-    id: string,
-    data: Record<string, unknown>,
-  ): Promise<Document> {
+  async update(id: string, data: Record<string, unknown>): Promise<Document> {
     const result = await this.pool.query(
       `UPDATE documents
        SET data = $2, updated_at = now()
