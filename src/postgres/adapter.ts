@@ -2,7 +2,9 @@ import pg from 'pg';
 import type { Document, StorageAdapter } from '../types.js';
 import { migrate } from './migrations.js';
 
+/** Connection options for the Postgres adapter. */
 export interface PostgresAdapterOptions {
+  /** A `postgres://` connection string. Passed directly to `pg.Pool`. */
   connectionString: string;
 }
 
