@@ -53,7 +53,8 @@ interface StorageAdapter {
   update(id: string, data: Record<string, unknown>): Promise<Document>;
   delete(id: string): Promise<void>;
 
-  list(blockType: string): Promise<Document[]>;
+  list(blockType: string, options?: ListOptions): Promise<Document[]>;
+  getMany(ids: string[]): Promise<Map<string, Document>>;
 }
 ```
 
@@ -85,9 +86,11 @@ make run     # No-op (library, not a service)
 
 ## Architecture
 
-- `src/types.ts` — `Document` and `StorageAdapter` interface definitions
+- `src/types.ts` — `Document`, `StorageAdapter`, and query types (`ListOptions`, `WhereClause`, `OrderByClause`, `FilterOperator`)
+- `src/query.ts` — Shared in-memory query helpers: `matchesWhere()`, `sortDocuments()`, `applyListOptions()`
 - `src/memory.ts` — In-memory adapter using a Map
 - `src/postgres/adapter.ts` — Postgres adapter using `pg`
+- `src/postgres/query.ts` — SQL query builder with field name validation and JSONB extraction
 - `src/postgres/migrations.ts` — Table creation SQL
 - `src/index.ts` — Public API exports
 

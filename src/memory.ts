@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import type { Document, StorageAdapter } from './types.js';
+import type { Document, ListOptions, StorageAdapter } from './types.js';
+import { applyListOptions } from './query.js';
 
 /** In-memory storage adapter for development and testing */
 export class MemoryAdapter implements StorageAdapter {
@@ -54,13 +55,22 @@ export class MemoryAdapter implements StorageAdapter {
     this.store.delete(id);
   }
 
-  async list(blockType: string): Promise<Document[]> {
+  async list(blockType: string, options?: ListOptions): Promise<Document[]> {
     const results: Document[] = [];
     for (const doc of this.store.values()) {
       if (doc.blockType === blockType) {
         results.push(doc);
       }
     }
-    return results;
+    return applyListOptions(results, options);
+  }
+
+  async getMany(ids: string[]): Promise<Map<string, Document>> {
+    const result = new Map<string, Document>();
+    for (const id of ids) {
+      const doc = this.store.get(id);
+      if (doc) result.set(id, doc);
+    }
+    return result;
   }
 }

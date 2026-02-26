@@ -1,6 +1,6 @@
 {
   "name": "@nextlake/storage",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Database-agnostic storage adapter with Postgres reference implementation",
   "type": "module",
   "main": "./dist/index.cjs",

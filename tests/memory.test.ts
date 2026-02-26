@@ -90,4 +90,118 @@ describe('MemoryAdapter', () => {
     const results = await adapter.list('hero');
     expect(results).toEqual([]);
   });
+
+  describe('list() with options', () => {
+    it('filters by exact data field value', async () => {
+      await adapter.create('article', { title: 'A', status: 'draft' });
+      await adapter.create('article', { title: 'B', status: 'published' });
+      await adapter.create('article', { title: 'C', status: 'published' });
+
+      const published = await adapter.list('article', {
+        where: { status: 'published' },
+      });
+      expect(published).toHaveLength(2);
+      expect(published.every((d) => d.data.status === 'published')).toBe(true);
+    });
+
+    it('filters with $contains (case-insensitive)', async () => {
+      await adapter.create('article', { title: 'Hello NextLake' });
+      await adapter.create('article', { title: 'Other post' });
+
+      const results = await adapter.list('article', {
+        where: { title: { $contains: 'nextlake' } },
+      });
+      expect(results).toHaveLength(1);
+      expect(results[0].data.title).toBe('Hello NextLake');
+    });
+
+    it('filters with comparison operators', async () => {
+      await adapter.create('article', { title: 'A', priority: 1 });
+      await adapter.create('article', { title: 'B', priority: 5 });
+      await adapter.create('article', { title: 'C', priority: 10 });
+
+      const results = await adapter.list('article', {
+        where: { priority: { $gte: 5 } },
+      });
+      expect(results).toHaveLength(2);
+    });
+
+    it('sorts by data field', async () => {
+      await adapter.create('article', { title: 'B' });
+      await adapter.create('article', { title: 'A' });
+      await adapter.create('article', { title: 'C' });
+
+      const results = await adapter.list('article', {
+        orderBy: { title: 'asc' },
+      });
+      expect(results.map((d) => d.data.title)).toEqual(['A', 'B', 'C']);
+    });
+
+    it('sorts by createdAt descending', async () => {
+      const a = await adapter.create('article-sort-date', { title: 'First' });
+      // Ensure distinct timestamp
+      a.createdAt = new Date('2025-01-01');
+      const b = await adapter.create('article-sort-date', { title: 'Second' });
+      b.createdAt = new Date('2025-06-01');
+
+      const results = await adapter.list('article-sort-date', {
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(results[0].id).toBe(b.id);
+      expect(results[1].id).toBe(a.id);
+    });
+
+    it('applies limit and offset', async () => {
+      for (let i = 0; i < 5; i++) {
+        await adapter.create('article', { title: `Item ${i}` });
+      }
+
+      const page = await adapter.list('article', { limit: 2, offset: 2 });
+      expect(page).toHaveLength(2);
+    });
+
+    it('combines where, orderBy, limit, and offset', async () => {
+      for (let i = 0; i < 10; i++) {
+        await adapter.create('article', {
+          title: `Item ${i}`,
+          status: i % 2 === 0 ? 'published' : 'draft',
+        });
+      }
+
+      const results = await adapter.list('article', {
+        where: { status: 'published' },
+        orderBy: { title: 'asc' },
+        limit: 2,
+        offset: 1,
+      });
+      expect(results).toHaveLength(2);
+      expect(results.every((d) => d.data.status === 'published')).toBe(true);
+    });
+  });
+
+  describe('getMany()', () => {
+    it('returns documents for matching IDs', async () => {
+      const a = await adapter.create('hero', { title: 'A' });
+      const b = await adapter.create('hero', { title: 'B' });
+      await adapter.create('hero', { title: 'C' });
+
+      const result = await adapter.getMany([a.id, b.id]);
+      expect(result.size).toBe(2);
+      expect(result.get(a.id)?.data.title).toBe('A');
+      expect(result.get(b.id)?.data.title).toBe('B');
+    });
+
+    it('silently omits missing IDs', async () => {
+      const a = await adapter.create('hero', { title: 'A' });
+
+      const result = await adapter.getMany([a.id, 'non-existent']);
+      expect(result.size).toBe(1);
+      expect(result.has('non-existent')).toBe(false);
+    });
+
+    it('returns empty map for empty input', async () => {
+      const result = await adapter.getMany([]);
+      expect(result.size).toBe(0);
+    });
+  });
 });

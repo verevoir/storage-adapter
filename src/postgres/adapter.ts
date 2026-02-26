@@ -1,6 +1,7 @@
 import pg from 'pg';
-import type { Document, StorageAdapter } from '../types.js';
+import type { Document, ListOptions, StorageAdapter } from '../types.js';
 import { migrate } from './migrations.js';
+import { buildListQuery } from './query.js';
 
 /** Connection options for the Postgres adapter. */
 export interface PostgresAdapterOptions {
@@ -77,14 +78,35 @@ export class PostgresAdapter implements StorageAdapter {
     }
   }
 
-  async list(blockType: string): Promise<Document[]> {
-    const result = await this.pool.query(
-      `SELECT id, block_type, data, created_at, updated_at
-       FROM documents WHERE block_type = $1
-       ORDER BY created_at`,
-      [blockType],
-    );
+  async list(blockType: string, options?: ListOptions): Promise<Document[]> {
+    const { sql: extra, params: extraParams } = buildListQuery(options, 2);
+
+    const baseSql = `SELECT id, block_type, data, created_at, updated_at
+       FROM documents WHERE block_type = $1`;
+
+    // If no options provided and no ORDER BY in extra, add default ordering
+    const fullSql = options
+      ? `${baseSql}${extra}`
+      : `${baseSql} ORDER BY created_at`;
+
+    const result = await this.pool.query(fullSql, [blockType, ...extraParams]);
     return result.rows.map((row) => this.rowToDocument(row));
+  }
+
+  async getMany(ids: string[]): Promise<Map<string, Document>> {
+    const result = new Map<string, Document>();
+    if (ids.length === 0) return result;
+
+    const queryResult = await this.pool.query(
+      `SELECT id, block_type, data, created_at, updated_at
+       FROM documents WHERE id = ANY($1)`,
+      [ids],
+    );
+    for (const row of queryResult.rows) {
+      const doc = this.rowToDocument(row);
+      result.set(doc.id, doc);
+    }
+    return result;
   }
 
   private rowToDocument(row: Record<string, unknown>): Document {

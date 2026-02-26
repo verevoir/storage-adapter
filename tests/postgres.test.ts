@@ -119,4 +119,129 @@ describe('PostgresAdapter', () => {
     // Should not throw when called again
     await adapter.migrate();
   });
+
+  describe('list() with options', () => {
+    it('filters by exact data field value', async () => {
+      await adapter.create('pg-q-filter', { title: 'A', status: 'draft' });
+      await adapter.create('pg-q-filter', {
+        title: 'B',
+        status: 'published',
+      });
+      await adapter.create('pg-q-filter', {
+        title: 'C',
+        status: 'published',
+      });
+
+      const published = await adapter.list('pg-q-filter', {
+        where: { status: 'published' },
+      });
+      expect(published).toHaveLength(2);
+      expect(
+        published.every(
+          (d) => (d.data as Record<string, unknown>).status === 'published',
+        ),
+      ).toBe(true);
+    });
+
+    it('filters with $contains (case-insensitive)', async () => {
+      await adapter.create('pg-q-contains', { title: 'Hello NextLake' });
+      await adapter.create('pg-q-contains', { title: 'Other post' });
+
+      const results = await adapter.list('pg-q-contains', {
+        where: { title: { $contains: 'nextlake' } },
+      });
+      expect(results).toHaveLength(1);
+      expect((results[0].data as Record<string, unknown>).title).toBe(
+        'Hello NextLake',
+      );
+    });
+
+    it('sorts by data field', async () => {
+      await adapter.create('pg-q-sort', { title: 'B' });
+      await adapter.create('pg-q-sort', { title: 'A' });
+      await adapter.create('pg-q-sort', { title: 'C' });
+
+      const results = await adapter.list('pg-q-sort', {
+        orderBy: { title: 'asc' },
+      });
+      expect(
+        results.map((d) => (d.data as Record<string, unknown>).title),
+      ).toEqual(['A', 'B', 'C']);
+    });
+
+    it('sorts by createdAt descending', async () => {
+      const a = await adapter.create('pg-q-sortd', { title: 'First' });
+      const b = await adapter.create('pg-q-sortd', { title: 'Second' });
+
+      const results = await adapter.list('pg-q-sortd', {
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(results[0].id).toBe(b.id);
+      expect(results[1].id).toBe(a.id);
+    });
+
+    it('applies limit and offset', async () => {
+      for (let i = 0; i < 5; i++) {
+        await adapter.create('pg-q-page', { title: `Item ${i}` });
+      }
+
+      const page = await adapter.list('pg-q-page', { limit: 2, offset: 2 });
+      expect(page).toHaveLength(2);
+    });
+
+    it('combines where, orderBy, limit, and offset', async () => {
+      for (let i = 0; i < 10; i++) {
+        await adapter.create('pg-q-combo', {
+          title: `Item ${String(i).padStart(2, '0')}`,
+          status: i % 2 === 0 ? 'published' : 'draft',
+        });
+      }
+
+      const results = await adapter.list('pg-q-combo', {
+        where: { status: 'published' },
+        orderBy: { title: 'asc' },
+        limit: 2,
+        offset: 1,
+      });
+      expect(results).toHaveLength(2);
+      expect(
+        results.every(
+          (d) => (d.data as Record<string, unknown>).status === 'published',
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe('getMany()', () => {
+    it('returns documents for matching IDs', async () => {
+      const a = await adapter.create('pg-getmany', { title: 'A' });
+      const b = await adapter.create('pg-getmany', { title: 'B' });
+      await adapter.create('pg-getmany', { title: 'C' });
+
+      const result = await adapter.getMany([a.id, b.id]);
+      expect(result.size).toBe(2);
+      expect((result.get(a.id)?.data as Record<string, unknown>).title).toBe(
+        'A',
+      );
+      expect((result.get(b.id)?.data as Record<string, unknown>).title).toBe(
+        'B',
+      );
+    });
+
+    it('silently omits missing IDs', async () => {
+      const a = await adapter.create('pg-getmany2', { title: 'A' });
+
+      const result = await adapter.getMany([
+        a.id,
+        '00000000-0000-0000-0000-000000000099',
+      ]);
+      expect(result.size).toBe(1);
+      expect(result.has('00000000-0000-0000-0000-000000000099')).toBe(false);
+    });
+
+    it('returns empty map for empty input', async () => {
+      const result = await adapter.getMany([]);
+      expect(result.size).toBe(0);
+    });
+  });
 });
