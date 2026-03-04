@@ -1,7 +1,8 @@
 {
-  "name": "@nextlake/storage",
-  "version": "0.2.0",
+  "name": "@verevoir/storage",
+  "version": "0.3.0-alpha.1",
   "description": "Database-agnostic storage adapter with Postgres reference implementation",
+  "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

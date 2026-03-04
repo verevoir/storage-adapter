@@ -1,4 +1,4 @@
-# Intent — @nextlake/storage
+# Intent — @verevoir/storage
 
 ## Purpose
 

@@ -1,4 +1,4 @@
-# @nextlake/storage
+# @verevoir/storage
 
 A database-agnostic persistence layer for NextLake content. Provides an abstract `StorageAdapter` interface and two implementations: an in-memory adapter for development/testing and a Postgres adapter using JSONB.
 
@@ -13,7 +13,7 @@ A database-agnostic persistence layer for NextLake content. Provides an abstract
 ## Install
 
 ```bash
-npm install @nextlake/storage
+npm install @verevoir/storage
 ```
 
 ## Quick Example
@@ -21,7 +21,7 @@ npm install @nextlake/storage
 ### In-Memory (development/testing)
 
 ```typescript
-import { MemoryAdapter } from '@nextlake/storage';
+import { MemoryAdapter } from '@verevoir/storage';
 
 const storage = new MemoryAdapter();
 await storage.connect();
@@ -36,7 +36,7 @@ await storage.disconnect();
 ### Postgres
 
 ```typescript
-import { PostgresAdapter } from '@nextlake/storage';
+import { PostgresAdapter } from '@verevoir/storage';
 
 const storage = new PostgresAdapter({
   connectionString: 'postgres://user:pass@localhost:5432/mydb',
