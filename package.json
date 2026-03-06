@@ -19,7 +19,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:adsurg/next-lake-storage-adapter.git"
+    "url": "git+ssh://git@github.com:verevoir/storage-adapter.git"
   },
   "scripts": {
     "prepare": "npm run build",
