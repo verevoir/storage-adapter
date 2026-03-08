@@ -1,0 +1,107 @@
+# @verevoir/storage
+
+> Database-agnostic document persistence. Provides a StorageAdapter interface with MemoryAdapter and PostgresAdapter implementations.
+
+## Install
+
+```bash
+npm install @verevoir/storage
+```
+
+## Core Interface
+
+### StorageAdapter
+
+```typescript
+interface StorageAdapter {
+  connect(): Promise<void>;
+  disconnect(): Promise<void>;
+  migrate(): Promise<void>;
+  create(blockType: string, data: Record<string, unknown>): Promise<Document>;
+  get(id: string): Promise<Document>;
+  update(id: string, data: Record<string, unknown>): Promise<Document>;
+  delete(id: string): Promise<void>;
+  list(blockType: string, options?: ListOptions): Promise<Document[]>;
+  getMany(ids: string[]): Promise<Map<string, Document>>;
+}
+```
+
+### Document
+
+```typescript
+interface Document {
+  id: string;
+  blockType: string;
+  data: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+## Adapters
+
+### MemoryAdapter
+
+Zero-dependency in-memory adapter. Good for development and testing.
+
+```typescript
+import { MemoryAdapter } from '@verevoir/storage';
+
+const db = new MemoryAdapter();
+await db.connect();
+```
+
+### PostgresAdapter
+
+Production adapter using `pg`. Requires `pg` as a peer dependency.
+
+```typescript
+import { PostgresAdapter } from '@verevoir/storage';
+
+const db = new PostgresAdapter({ connectionString: process.env.DATABASE_URL });
+await db.connect();
+await db.migrate(); // creates tables if not exist
+```
+
+## Querying
+
+### list(blockType, options?)
+
+```typescript
+interface ListOptions {
+  where?: WhereClause;
+  orderBy?: OrderByClause[];
+  limit?: number;
+  offset?: number;
+}
+
+// WhereClause — exact match or operators
+type WhereClause = Record<string, FilterValue | FilterOperator>;
+
+// FilterOperator supports: $gt, $gte, $lt, $lte, $ne, $contains
+// $contains is case-insensitive
+```
+
+Examples:
+
+```typescript
+// Exact match
+await db.list('article', { where: { status: 'published' } });
+
+// Operators
+await db.list('article', {
+  where: { title: { $contains: 'hello' } },
+  orderBy: [{ field: 'updatedAt', direction: 'desc' }],
+  limit: 10,
+});
+```
+
+### getMany(ids)
+
+Returns `Map<string, Document>` for batch lookups.
+
+## Common Patterns
+
+- Call `migrate()` once on startup (PostgresAdapter creates tables automatically)
+- Storage is block-type-aware but schema-unaware — validate data before writing
+- The `data` field stores arbitrary JSON; structure is enforced by `@verevoir/schema`
