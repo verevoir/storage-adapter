@@ -57,7 +57,8 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.current }}"
           if echo "$VERSION" | grep -qE '-(alpha|beta|rc)'; then
-            echo "tag=alpha" >> "$GITHUB_OUTPUT"
+            PRE=$(echo "$VERSION" | sed 's/.*-\([a-z]*\).*/\1/')
+            echo "tag=$PRE" >> "$GITHUB_OUTPUT"
           else
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
