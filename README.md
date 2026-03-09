@@ -93,6 +93,12 @@ interface Document<T = Record<string, unknown>> {
 - **Postgres stores content in a single `documents` table** with a JSONB `data` column. Metadata columns (`id`, `block_type`, `created_at`, `updated_at`) are proper typed columns for indexing and querying.
 - **The in-memory adapter matches the same interface**, making it a drop-in replacement for tests.
 
+## Documentation
+
+- [Building a Storage Adapter](https://verevoir.io/docs/building-a-storage-adapter) — implementing the StorageAdapter interface
+- [Getting Started](https://verevoir.io/docs/getting-started) — content model, storage, and editor in five minutes
+- [Integration Guide](https://verevoir.io/docs/integration) — connecting content models, storage, editor, and more
+
 ## Development
 
 ```bash
