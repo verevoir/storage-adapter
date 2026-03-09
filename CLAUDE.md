@@ -1,6 +1,6 @@
 # @verevoir/storage — Storage Adapter
 
-A database-agnostic persistence layer for NextLake content. Provides an abstract `StorageAdapter` interface and two implementations: an in-memory adapter for development/testing and a Postgres adapter using JSONB.
+A database-agnostic persistence layer for Verevoir content. Provides an abstract `StorageAdapter` interface and two implementations: an in-memory adapter for development/testing and a Postgres adapter using JSONB.
 
 ## What It Does
 

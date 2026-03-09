@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provide a database-agnostic persistence layer so developers can store and retrieve NextLake content documents using whichever database they already run. The developer owns the database — NextLake never does.
+Provide a database-agnostic persistence layer so developers can store and retrieve Verevoir content documents using whichever database they already run. The developer owns the database — Verevoir never does.
 
 ## Goals
 
@@ -22,7 +22,7 @@ Provide a database-agnostic persistence layer so developers can store and retrie
 
 - **Interface-based abstraction.** `StorageAdapter` is a TypeScript interface, not a base class. This avoids inheritance coupling and lets adapters be structurally typed.
 - **Postgres as reference, not exclusive.** The Postgres adapter proves the interface works and gives developers a production-ready starting point, but it is not privileged — MemoryAdapter has the same status.
-- **MemoryAdapter ships alongside.** Every project that uses NextLake needs a test adapter. Shipping MemoryAdapter in the same package avoids a separate dev-dependency and guarantees interface parity.
+- **MemoryAdapter ships alongside.** Every project that uses Verevoir needs a test adapter. Shipping MemoryAdapter in the same package avoids a separate dev-dependency and guarantees interface parity.
 - **Single documents table.** All block types share one table with a JSONB `data` column. This trades query flexibility for simplicity — no migrations when content models change.
 - **No data validation.** The adapter trusts its caller. Separating validation (schema engine) from persistence (storage adapter) keeps each package focused and avoids circular dependencies.
 

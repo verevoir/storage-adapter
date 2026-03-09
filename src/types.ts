@@ -41,7 +41,7 @@ export interface ListOptions {
   offset?: number;
 }
 
-/** Abstract persistence interface for NextLake content */
+/** Abstract persistence interface for Verevoir content */
 export interface StorageAdapter {
   /** Open connection to the backing store */
   connect(): Promise<void>;
