@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/storage",
-  "version": "0.3.0-beta.4",
+  "version": "1.0.0",
   "description": "Database-agnostic storage adapter with Postgres reference implementation",
   "homepage": "https://verevoir.io",
   "license": "MIT",
