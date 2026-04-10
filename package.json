@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/storage",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Database-agnostic storage adapter with Postgres reference implementation",
   "homepage": "https://verevoir.io",
   "license": "MIT",
@@ -35,15 +35,15 @@
     "pg": "^8.20.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.4",
-    "@testcontainers/postgresql": "^11.13.0",
-    "@types/pg": "^8.18.0",
-    "eslint": "^9.39.4",
+    "@eslint/js": "^10.0.1",
+    "@testcontainers/postgresql": "^11.14.0",
+    "@types/pg": "^8.20.0",
+    "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.2",
     "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.56.1",
-    "vitest": "^3.2.4"
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.1",
+    "vitest": "^4.1.4"
   }
 }

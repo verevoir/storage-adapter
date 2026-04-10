@@ -10,7 +10,9 @@ describe('PostgresAdapter', () => {
   let adapter: PostgresAdapter;
 
   beforeAll(async () => {
-    container = await new PostgreSqlContainer('postgres:16-alpine').withReuse().start();
+    container = await new PostgreSqlContainer('postgres:16-alpine')
+      .withReuse()
+      .start();
     adapter = new PostgresAdapter({
       connectionString: container.getConnectionUri(),
     });

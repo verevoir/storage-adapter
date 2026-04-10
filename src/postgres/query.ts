@@ -155,7 +155,7 @@ export function buildListQuery(
   }
 
   if (options.offset !== undefined) {
-    sql += ` OFFSET $${idx++}`;
+    sql += ` OFFSET $${idx}`;
     allParams.push(options.offset);
   }
 
