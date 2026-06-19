@@ -108,3 +108,34 @@ Returns `Map<string, Document>` for batch lookups.
 - Call `migrate()` once on startup (PostgresAdapter creates tables automatically)
 - Storage is block-type-aware but schema-unaware — validate data before writing
 - The `data` field stores arbitrary JSON; structure is enforced by `@verevoir/schema`
+
+## Design
+
+- **The adapter does not validate data** — validation belongs to the schema
+  engine; the adapter persists whatever it receives. Keep this boundary: don't
+  add field checks here.
+- **Postgres uses a single `documents` table.** The content payload lives in a
+  JSONB `data` column; metadata (`id`, `block_type`, `created_at`, `updated_at`)
+  are proper typed columns for indexing and querying. `migrate()` creates this
+  table (idempotent — safe to call on every startup).
+- **MemoryAdapter matches the same interface** (a `Map` under the hood, zero
+  dependencies), so it's a drop-in replacement for tests.
+
+### Internals
+
+| File                         | Responsibility                              |
+| ---------------------------- | ------------------------------------------- |
+| `src/types.ts`               | `Document` + `StorageAdapter` definitions   |
+| `src/memory.ts`              | In-memory adapter (a `Map`)                 |
+| `src/postgres/adapter.ts`    | Postgres adapter using `pg`                 |
+| `src/postgres/migrations.ts` | Table-creation SQL                          |
+| `src/index.ts`               | Public API exports                          |
+
+## Development
+
+```bash
+npm install    # install dependencies
+make build     # compile TypeScript
+make test      # run the test suite (needs Docker for the Postgres integration tests)
+make lint      # check formatting
+```
