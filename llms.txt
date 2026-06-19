@@ -18,7 +18,7 @@ interface StorageAdapter {
   disconnect(): Promise<void>;
   migrate(): Promise<void>;
   create(blockType: string, data: Record<string, unknown>): Promise<Document>;
-  get(id: string): Promise<Document>;
+  get(id: string): Promise<Document | null>;
   update(id: string, data: Record<string, unknown>): Promise<Document>;
   delete(id: string): Promise<void>;
   list(blockType: string, options?: ListOptions): Promise<Document[]>;
@@ -29,12 +29,12 @@ interface StorageAdapter {
 ### Document
 
 ```typescript
-interface Document {
+interface Document<T = Record<string, unknown>> {
   id: string;
   blockType: string;
-  data: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  data: T;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -70,16 +70,19 @@ await db.migrate(); // creates tables if not exist
 ```typescript
 interface ListOptions {
   where?: WhereClause;
-  orderBy?: OrderByClause[];
+  orderBy?: OrderByClause;
   limit?: number;
   offset?: number;
 }
 
-// WhereClause — exact match or operators
-type WhereClause = Record<string, FilterValue | FilterOperator>;
-
+// WhereClause — field names mapped to a filter value (exact match or operator)
+type WhereClause = Record<string, FilterValue>;
+// FilterValue = string | number | boolean | Date | null | FilterOperator
 // FilterOperator supports: $gt, $gte, $lt, $lte, $ne, $contains
-// $contains is case-insensitive
+// $contains is a case-insensitive substring match
+
+// OrderByClause — field names mapped to sort direction
+type OrderByClause = Record<string, 'asc' | 'desc'>;
 ```
 
 Examples:
@@ -91,7 +94,7 @@ await db.list('article', { where: { status: 'published' } });
 // Operators
 await db.list('article', {
   where: { title: { $contains: 'hello' } },
-  orderBy: [{ field: 'updatedAt', direction: 'desc' }],
+  orderBy: { updatedAt: 'desc' },
   limit: 10,
 });
 ```
