@@ -18,7 +18,7 @@ interface StorageAdapter {
   disconnect(): Promise<void>;
   migrate(): Promise<void>;
   create(blockType: string, data: Record<string, unknown>): Promise<Document>;
-  get(id: string): Promise<Document>;
+  get(id: string): Promise<Document | null>;
   update(id: string, data: Record<string, unknown>): Promise<Document>;
   delete(id: string): Promise<void>;
   list(blockType: string, options?: ListOptions): Promise<Document[]>;
@@ -29,12 +29,12 @@ interface StorageAdapter {
 ### Document
 
 ```typescript
-interface Document {
+interface Document<T = Record<string, unknown>> {
   id: string;
   blockType: string;
-  data: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  data: T;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -70,16 +70,19 @@ await db.migrate(); // creates tables if not exist
 ```typescript
 interface ListOptions {
   where?: WhereClause;
-  orderBy?: OrderByClause[];
+  orderBy?: OrderByClause;
   limit?: number;
   offset?: number;
 }
 
-// WhereClause — exact match or operators
-type WhereClause = Record<string, FilterValue | FilterOperator>;
-
+// WhereClause — field names mapped to a filter value (exact match or operator)
+type WhereClause = Record<string, FilterValue>;
+// FilterValue = string | number | boolean | Date | null | FilterOperator
 // FilterOperator supports: $gt, $gte, $lt, $lte, $ne, $contains
-// $contains is case-insensitive
+// $contains is a case-insensitive substring match
+
+// OrderByClause — field names mapped to sort direction
+type OrderByClause = Record<string, 'asc' | 'desc'>;
 ```
 
 Examples:
@@ -91,7 +94,7 @@ await db.list('article', { where: { status: 'published' } });
 // Operators
 await db.list('article', {
   where: { title: { $contains: 'hello' } },
-  orderBy: [{ field: 'updatedAt', direction: 'desc' }],
+  orderBy: { updatedAt: 'desc' },
   limit: 10,
 });
 ```
@@ -105,3 +108,34 @@ Returns `Map<string, Document>` for batch lookups.
 - Call `migrate()` once on startup (PostgresAdapter creates tables automatically)
 - Storage is block-type-aware but schema-unaware — validate data before writing
 - The `data` field stores arbitrary JSON; structure is enforced by `@verevoir/schema`
+
+## Design
+
+- **The adapter does not validate data** — validation belongs to the schema
+  engine; the adapter persists whatever it receives. Keep this boundary: don't
+  add field checks here.
+- **Postgres uses a single `documents` table.** The content payload lives in a
+  JSONB `data` column; metadata (`id`, `block_type`, `created_at`, `updated_at`)
+  are proper typed columns for indexing and querying. `migrate()` creates this
+  table (idempotent — safe to call on every startup).
+- **MemoryAdapter matches the same interface** (a `Map` under the hood, zero
+  dependencies), so it's a drop-in replacement for tests.
+
+### Internals
+
+| File                         | Responsibility                              |
+| ---------------------------- | ------------------------------------------- |
+| `src/types.ts`               | `Document` + `StorageAdapter` definitions   |
+| `src/memory.ts`              | In-memory adapter (a `Map`)                 |
+| `src/postgres/adapter.ts`    | Postgres adapter using `pg`                 |
+| `src/postgres/migrations.ts` | Table-creation SQL                          |
+| `src/index.ts`               | Public API exports                          |
+
+## Development
+
+```bash
+npm install    # install dependencies
+make build     # compile TypeScript
+make test      # run the test suite (needs Docker for the Postgres integration tests)
+make lint      # check formatting
+```
