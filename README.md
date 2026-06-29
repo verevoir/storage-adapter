@@ -1,24 +1,14 @@
 # @verevoir/storage
 
-A database-agnostic persistence layer for Verevoir content. Provides an abstract `StorageAdapter` interface and two implementations: an in-memory adapter for development/testing and a Postgres adapter using JSONB.
-
-## What It Does
-
-- Defines a `StorageAdapter` interface for CRUD + listing of content documents
-- Ships a `MemoryAdapter` for tests and local development (zero dependencies)
-- Ships a `PostgresAdapter` backed by a single JSONB table (depends on `pg`)
-- Stores metadata (id, block type, timestamps) as proper columns; content payload as JSONB
-- Does **not** validate data — validation is the schema engine's job
-
-## Install
+Database-agnostic persistence for structured content. A stable `StorageAdapter` interface with in-memory and Postgres implementations; swap the adapter, keep the schema and the rest of your app.
 
 ```bash
 npm install @verevoir/storage
 ```
 
-## Quick Example
+## Quick start
 
-### In-Memory (development/testing)
+### In-memory (dev / test)
 
 ```typescript
 import { MemoryAdapter } from '@verevoir/storage';
@@ -43,12 +33,14 @@ const storage = new PostgresAdapter({
 });
 
 await storage.connect();
-await storage.migrate(); // creates documents table
+await storage.migrate(); // creates the documents table
 const doc = await storage.create('hero', { title: 'Hello' });
 await storage.disconnect();
 ```
 
-## StorageAdapter Interface
+Both adapters satisfy the same interface. Tests written against `MemoryAdapter` run without Docker; the Postgres adapter is a drop-in for production.
+
+## Interface
 
 ```typescript
 interface StorageAdapter {
@@ -58,16 +50,13 @@ interface StorageAdapter {
 
   create(blockType: string, data: Record<string, unknown>): Promise<Document>;
   get(id: string): Promise<Document | null>;
+  getMany(ids: string[]): Promise<Map<string, Document>>;
   update(id: string, data: Record<string, unknown>): Promise<Document>;
   delete(id: string): Promise<void>;
 
-  list(blockType: string): Promise<Document[]>;
+  list(blockType: string, options?: ListOptions): Promise<Document[]>;
 }
-```
 
-## Document Type
-
-```typescript
 interface Document<T = Record<string, unknown>> {
   id: string;
   blockType: string;
@@ -77,33 +66,64 @@ interface Document<T = Record<string, unknown>> {
 }
 ```
 
-## Architecture
+### Query options
 
-| File                         | Responsibility                                        |
-| ---------------------------- | ----------------------------------------------------- |
-| `src/types.ts`               | `Document` and `StorageAdapter` interface definitions |
-| `src/memory.ts`              | In-memory adapter using a Map                         |
-| `src/postgres/adapter.ts`    | Postgres adapter using `pg`                           |
-| `src/postgres/migrations.ts` | Table creation SQL                                    |
-| `src/index.ts`               | Public API exports                                    |
+`list` accepts a `ListOptions` shape with a type-safe where clause and ordering:
 
-## Design Decisions
-
-- **The adapter does not validate data.** Validation belongs to the schema engine. The adapter persists whatever it receives.
-- **Postgres stores content in a single `documents` table** with a JSONB `data` column. Metadata columns (`id`, `block_type`, `created_at`, `updated_at`) are proper typed columns for indexing and querying.
-- **The in-memory adapter matches the same interface**, making it a drop-in replacement for tests.
-
-## Documentation
-
-- [Building a Storage Adapter](https://verevoir.io/docs/building-a-storage-adapter) — implementing the StorageAdapter interface
-- [Getting Started](https://verevoir.io/docs/getting-started) — content model, storage, and editor in five minutes
-- [Integration Guide](https://verevoir.io/docs/integration) — connecting content models, storage, editor, and more
-
-## Development
-
-```bash
-npm install    # Install dependencies
-make build     # Compile TypeScript
-make test      # Run test suite (needs Docker for Postgres integration tests)
-make lint      # Check formatting
+```typescript
+const published = await storage.list('page', {
+  where: {
+    'data.status': 'published',
+    'data.publishFrom': { lte: new Date().toISOString() },
+  },
+  orderBy: { 'data.publishFrom': 'desc' },
+  limit: 20,
+});
 ```
+
+Operators: `eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `in`, `contains`, `startsWith`, `endsWith`. Dotted keys reach into the JSONB `data` column (or the Map equivalent on the memory adapter). The same helpers that power the memory adapter's filtering are exported as `matchesWhere`, `sortDocuments`, and `applyListOptions` for adapter authors to reuse.
+
+## Writing your own adapter
+
+```typescript
+import type { StorageAdapter, Document, ListOptions } from '@verevoir/storage';
+
+export class MyAdapter implements StorageAdapter {
+  async connect() { /* ... */ }
+  async disconnect() { /* ... */ }
+  async migrate() { /* ... */ }
+
+  async create(blockType, data): Promise<Document> { /* ... */ }
+  async get(id): Promise<Document | null> { /* ... */ }
+  async getMany(ids): Promise<Map<string, Document>> { /* ... */ }
+  async update(id, data): Promise<Document> { /* ... */ }
+  async delete(id): Promise<void> { /* ... */ }
+
+  async list(blockType, options?): Promise<Document[]> { /* ... */ }
+}
+```
+
+The test suite used for `MemoryAdapter` and `PostgresAdapter` is expressed against the interface — point it at your adapter to get broad coverage for free.
+
+## Design decisions
+
+- **No validation.** Validation is the schema engine's job ([`@verevoir/schema`](https://www.npmjs.com/package/@verevoir/schema)). The adapter persists whatever you pass it.
+- **Metadata as typed columns, content as JSONB.** Postgres uses a single `documents` table with `id`, `block_type`, `created_at`, `updated_at` as proper columns (indexable, queryable) and `data` as JSONB (schemaless).
+- **One interface, many backends.** MemoryAdapter isn't a test-only toy — it's the reference implementation. Postgres, S3, GCS, and filesystem adapters all implement the same contract.
+- **Structural typing.** `@verevoir/access`'s `role-store` and the asset manager depend only on the `StorageAdapter` shape, never on an import — so your custom adapter works with them without a dependency on this package.
+
+## Where it sits
+
+- **[@verevoir/schema](https://www.npmjs.com/package/@verevoir/schema)** — define the content shapes this adapter persists.
+- **[@verevoir/editor](https://www.npmjs.com/package/@verevoir/editor)** — auto-generated editing UI layered on top.
+- **[@verevoir/admin](https://www.npmjs.com/package/@verevoir/admin)** — admin shell that consumes the adapter through the editor.
+- **[Verevoir starter](https://github.com/verevoir/astro-sanity-starter)** — a filesystem-backed `BlobAdapter` as a worked reference; swap for Postgres for production.
+
+## Docs
+
+- [Building a storage adapter](https://verevoir.io/docs/building-a-storage-adapter)
+- [Integration guide](https://verevoir.io/docs/integration)
+
+## License
+
+MIT
