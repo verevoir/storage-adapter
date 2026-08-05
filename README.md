@@ -89,17 +89,35 @@ Operators: `eq`, `ne`, `lt`, `lte`, `gt`, `gte`, `in`, `contains`, `startsWith`,
 import type { StorageAdapter, Document, ListOptions } from '@verevoir/storage';
 
 export class MyAdapter implements StorageAdapter {
-  async connect() { /* ... */ }
-  async disconnect() { /* ... */ }
-  async migrate() { /* ... */ }
+  async connect() {
+    /* ... */
+  }
+  async disconnect() {
+    /* ... */
+  }
+  async migrate() {
+    /* ... */
+  }
 
-  async create(blockType, data): Promise<Document> { /* ... */ }
-  async get(id): Promise<Document | null> { /* ... */ }
-  async getMany(ids): Promise<Map<string, Document>> { /* ... */ }
-  async update(id, data): Promise<Document> { /* ... */ }
-  async delete(id): Promise<void> { /* ... */ }
+  async create(blockType, data): Promise<Document> {
+    /* ... */
+  }
+  async get(id): Promise<Document | null> {
+    /* ... */
+  }
+  async getMany(ids): Promise<Map<string, Document>> {
+    /* ... */
+  }
+  async update(id, data): Promise<Document> {
+    /* ... */
+  }
+  async delete(id): Promise<void> {
+    /* ... */
+  }
 
-  async list(blockType, options?): Promise<Document[]> { /* ... */ }
+  async list(blockType, options?): Promise<Document[]> {
+    /* ... */
+  }
 }
 ```
 

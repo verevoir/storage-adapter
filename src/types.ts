@@ -20,12 +20,7 @@ export interface FilterOperator {
 
 /** A filter value: either an exact match or an operator object */
 export type FilterValue =
-  | string
-  | number
-  | boolean
-  | Date
-  | null
-  | FilterOperator;
+  string | number | boolean | Date | null | FilterOperator;
 
 /** Where clause: field names mapped to filter values */
 export type WhereClause = Record<string, FilterValue>;
