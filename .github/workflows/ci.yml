@@ -62,11 +62,21 @@ jobs:
       #
       # GITHUB_TOKEN is provided automatically by Actions, so this step needs
       # no configured secret and works in every repo in the org.
+      # Re-point npm's auth config at GitHub Packages. setup-node writes its
+      # .npmrc into RUNNER_TEMP and exports NPM_CONFIG_USERCONFIG at it, which
+      # overrides ~/.npmrc entirely — so appending an auth line to ~/.npmrc is
+      # silently ignored and the publish fails ENEEDAUTH. Re-running setup-node
+      # is the supported way to switch registries mid-job.
+      - uses: actions/setup-node@v4
+        if: steps.version.outputs.changed == 'true'
+        with:
+          node-version: 24
+          registry-url: https://npm.pkg.github.com
+          scope: '@verevoir'
+
       - name: Publish to GitHub Packages
         if: steps.version.outputs.changed == 'true'
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
-          npm publish --registry=https://npm.pkg.github.com --tag ${{ steps.npm-tag.outputs.tag }}
+        run: npm publish --tag ${{ steps.npm-tag.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
