@@ -84,6 +84,23 @@ make test    # Run test suite (needs Docker for Postgres integration tests)
 make run     # No-op (library, not a service)
 ```
 
+### Running the Postgres tests under Colima
+
+Testcontainers looks for the Docker socket at its default path and gives up
+with "Could not find a working container runtime strategy" — the Postgres
+tests then **skip silently** and the suite still reports green, which is the
+misleading part. Point it at Colima's socket:
+
+```bash
+export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+With that set the suite runs 60 tests; without it, 40 with 20 skipped.
+Colima rather than Docker Desktop because Docker Desktop needs a paid
+licence above a size threshold, and this project's whole pitch is no
+licensing costs.
+
 ## Architecture
 
 - `src/types.ts` — `Document`, `StorageAdapter`, and query types (`ListOptions`, `WhereClause`, `OrderByClause`, `FilterOperator`)
